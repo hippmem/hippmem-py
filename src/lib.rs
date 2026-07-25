@@ -53,9 +53,9 @@ struct PyEngine {
 
 #[pymethods]
 impl PyEngine {
-    #[new]
+    #[staticmethod]
     #[pyo3(signature = (path = None))]
-    fn new(path: Option<String>) -> PyResult<Self> {
+    fn open(path: Option<String>) -> PyResult<Self> {
         let store_dir = path
             .map(PathBuf::from)
             .unwrap_or_else(|| PathBuf::from("./hippmem_data"));
@@ -161,7 +161,7 @@ impl PyEngine {
 // ── Module ──
 
 #[pymodule]
-fn _hippmem(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn hippmem(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyEngine>()?;
     m.add_class::<WriteOutput>()?;
     m.add_class::<RetrievalResult>()?;
