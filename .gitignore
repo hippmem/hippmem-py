@@ -1,0 +1,11 @@
+/target
+__pycache__
+*.pyc
+*.so
+*.dylib
+.hippmem_data
+hippmem_data
+*.redb
+fulltext/
+CLAUDE.md
+dist/

@@ -1,0 +1,15 @@
+# COPYRIGHT · hippmem-py
+
+hippmem-py is distributed under the Apache License 2.0 (see LICENSE).
+
+This package is a Python binding for HIPPMEM (https://github.com/hippmem/hippmem).
+The underlying Rust engine (hippmem-engine) is licensed under AGPL-3.0-only.
+See https://github.com/hippmem/hippmem/blob/main/COPYRIGHT for the full
+two-tier licensing overview of the HIPPMEM project.
+
+Important: importing hippmem-py into a program does NOT cause that program
+to be subject to AGPL-3.0-only. The AGPL applies only to the hippmem-engine
+crate itself. hippmem-py is a thin wrapper layer and is Apache 2.0.
+
+For commercial licensing inquiries regarding hippmem-engine, contact
+hippmem@gmail.com.
