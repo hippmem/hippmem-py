@@ -20,12 +20,19 @@ jobs:
         run: cargo clippy -- -D warnings
       - name: Install maturin
         run: pip install maturin
-      - name: Build and install
-        run: maturin develop --release
-      - name: Run pytest
+      - name: Build wheel
+        run: maturin build --release --out dist
+      - name: Install wheel
+        run: pip install dist/hippmem-*.whl
+      - name: Run tests (from /tmp to avoid local package shadowing)
         run: |
           pip install pytest
-          pytest tests/ -v
+          cd /tmp
+          python -m pytest "$GITHUB_WORKSPACE/tests/" -v
+      - name: Smoke test (from /tmp)
+        run: |
+          cd /tmp
+          python -c "from hippmem import Engine; e = Engine.open(); e.write('smoke test'); r = e.retrieve('smoke test'); assert len(r.results) > 0; e.close(); print('OK')"
 
   build-wheels:
     runs-on: ${{ matrix.os }}
@@ -45,8 +52,9 @@ jobs:
         run: pip install maturin
       - name: Build wheels
         run: maturin build --release
-      - name: Smoke test
+      - name: Smoke test (from /tmp)
         shell: bash
         run: |
           pip install target/wheels/hippmem-*.whl
-          python -c "from hippmem import Engine; e = Engine.open(); print('OK')"
+          cd /tmp
+          python -c "from hippmem import Engine; e = Engine.open(); e.write('smoke test'); r = e.retrieve('smoke test'); assert len(r.results) > 0; e.close(); print('OK')"
