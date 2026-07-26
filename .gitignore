@@ -9,3 +9,4 @@ hippmem_data
 fulltext/
 CLAUDE.md
 dist/
+.env
