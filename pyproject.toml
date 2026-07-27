@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "hippmem"
-version = "0.1.0"
+version = "0.1.1"
 description = "Native associative memory engine for AI agents"
 authors = [{ name = "hippmem", email = "hippmem@gmail.com" }]
 readme = "README.md"

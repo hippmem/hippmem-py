@@ -1,6 +1,11 @@
 # Changelog
 
-## [0.1.0] — unreleased
+## [0.1.1] — 2026-07-26
+
+- Add docstrings to all classes and methods (runtime `help()` support)
+- Add `.pyi` type stub for VSCode/Pylance autocomplete
+
+## [0.1.0] — 2026-07-25
 
 - Initial release: Python bindings for HIPPMEM
 - `Engine.open()` / `engine.write()` / `engine.retrieve()` / `engine.close()`
