@@ -1,7 +1,9 @@
+use hippmem_core::config::EmbedderConfig;
 use hippmem_core::model::enums::ContentType;
 use hippmem_core::model::links::RetrievalMode;
 use hippmem_core::model::unit::WriteContext;
 use hippmem_engine::{Engine, EngineConfig, RetrieveContext, RetrieveInput, WriteMemoryInput};
+use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use std::path::PathBuf;
 
@@ -90,18 +92,63 @@ impl PyEngine {
     ///
     /// Args:
     ///     path: Path to the store file. Defaults to ``"./hippmem_data"``.
+    ///     embedder: ``"hash"`` (default, offline SimHash) or ``"neural"``
+    ///         (API-based, higher semantic accuracy).
+    ///     api_base_url: Required when ``embedder="neural"``.
+    ///     api_key: Required when ``embedder="neural"``.
+    ///     model: Required when ``embedder="neural"``.
     ///
     /// Returns:
     ///     An Engine instance connected to the store.
+    ///
+    /// Raises:
+    ///     TypeError: ``embedder="neural"`` without all three API params.
+    ///     ValueError: unknown embedder name.
     #[staticmethod]
-    #[pyo3(signature = (path = None))]
-    fn open(path: Option<String>) -> PyResult<Self> {
+    #[pyo3(signature = (
+        path = None,
+        embedder = "hash",
+        api_base_url = None,
+        api_key = None,
+        model = None,
+    ))]
+    fn open(
+        path: Option<String>,
+        embedder: &str,
+        api_base_url: Option<String>,
+        api_key: Option<String>,
+        model: Option<String>,
+    ) -> PyResult<Self> {
         let store_dir = path
             .map(PathBuf::from)
             .unwrap_or_else(|| PathBuf::from("./hippmem_data"));
 
+        let embedder_config = match embedder {
+            "hash" => EmbedderConfig::Hash { dimensions: 256 },
+            "neural" => {
+                let (Some(base_url), Some(key), Some(model_name)) = (api_base_url, api_key, model)
+                else {
+                    return Err(PyTypeError::new_err(
+                        "embedder='neural' requires api_base_url, api_key, and model",
+                    ));
+                };
+                EmbedderConfig::Neural {
+                    base_url,
+                    model: model_name,
+                    api_key: Some(key),
+                    dimensions: 1536,
+                }
+            }
+            other => {
+                return Err(PyValueError::new_err(format!(
+                    "embedder must be 'hash' or 'neural', got {other:?}"
+                )));
+            }
+        };
+
         let engine = Engine::open(EngineConfig {
             store_dir,
+            embedder: embedder_config,
             ..Default::default()
         })
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;

@@ -54,14 +54,29 @@ class Engine:
     """
 
     @staticmethod
-    def open(path: Optional[str] = None) -> "Engine":
+    def open(
+        path: Optional[str] = None,
+        embedder: str = "hash",
+        api_base_url: Optional[str] = None,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
+    ) -> "Engine":
         """Open or create a HIPPMEM memory store.
 
         Args:
             path: Path to the store file. Defaults to ``"./hippmem_data"``.
+            embedder: ``"hash"`` (default, offline SimHash) or ``"neural"``
+                (API-based, higher semantic accuracy).
+            api_base_url: Required when ``embedder="neural"``.
+            api_key: Required when ``embedder="neural"``.
+            model: Required when ``embedder="neural"``.
 
         Returns:
             An Engine instance connected to the store.
+
+        Raises:
+            TypeError: ``embedder="neural"`` without all three API params.
+            ValueError: unknown embedder name.
         """
         ...
 

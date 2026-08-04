@@ -21,6 +21,59 @@ def test_open_and_close(engine):
     assert engine is not None
 
 
+# ── embedder parameter (D10) ──
+
+def test_open_explicit_hash_embedder():
+    """embedder='hash' is explicit and works."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        e = Engine.open(os.path.join(tmpdir, "t.redb"), embedder="hash")
+        e.write("test")
+        e.close()
+
+
+def test_open_neural_requires_all_params():
+    """embedder='neural' without api params raises TypeError."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path = os.path.join(tmpdir, "t.redb")
+        with pytest.raises(TypeError):
+            Engine.open(path, embedder="neural")
+        with pytest.raises(TypeError):
+            Engine.open(path, embedder="neural", api_key="sk-x")
+        with pytest.raises(TypeError):
+            Engine.open(
+                path,
+                embedder="neural",
+                api_base_url="https://api.openai.com/v1",
+                api_key="sk-x",
+            )
+
+
+def test_open_unknown_embedder_raises():
+    """Unknown embedder name raises ValueError."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with pytest.raises(ValueError):
+            Engine.open(os.path.join(tmpdir, "t.redb"), embedder="magic")
+
+
+def test_open_neural_full_params_builds():
+    """embedder='neural' with all params constructs the embedder (may fail on auth at embed time)."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Construction succeeds; embedding without a real key fails gracefully later.
+        e = Engine.open(
+            os.path.join(tmpdir, "t.redb"),
+            embedder="neural",
+            api_base_url="https://api.openai.com/v1",
+            api_key="sk-test-invalid",
+            model="text-embedding-3-small",
+        )
+        # write triggers an embedding; with an invalid key it should error, not panic.
+        try:
+            e.write("hello")
+        except Exception:
+            pass
+        e.close()
+
+
 def test_write_single(engine):
     """Writing a memory returns expected output."""
     out = engine.write("The user prefers Rust.", content_type="Preference", importance=0.8)

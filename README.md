@@ -19,6 +19,7 @@ No GPU, API key, or network required — the deterministic fallback backend work
 ```python
 from hippmem import Engine
 
+# Hash embedder — offline, zero config (default)
 engine = Engine.open()
 engine.write("The user prefers Rust.", content_type="Preference")
 engine.write("The user chose redb — pure Rust, fast compile.", content_type="Decision")
@@ -29,6 +30,17 @@ for r in results.results:
     print(f"  dimensions: {r.dimensions}")
 
 engine.close()
+```
+
+### Neural embedder (higher semantic accuracy)
+
+```python
+engine = Engine.open(
+    embedder="neural",
+    api_base_url="https://api.openai.com/v1",
+    api_key="sk-...",
+    model="text-embedding-3-small",
+)
 ```
 
 ## Why associative memory?

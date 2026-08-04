@@ -2,13 +2,36 @@
 
 ## Engine
 
-### `Engine.open(path=None)`
+### `Engine.open(path=None, embedder="hash", api_base_url=None, api_key=None, model=None)`
 
 Open or create a HIPPMEM memory store.
 
-| Param | Type | Default | Description |
-|-------|------|---------|-------------|
-| path  | str  | `"./hippmem_data"` | Path to the store file |
+| Param         | Type  | Default | Description |
+|---------------|-------|---------|-------------|
+| path          | str   | `"./hippmem_data"` | Path to the store file |
+| embedder      | str   | `"hash"` | `"hash"` (offline SimHash) or `"neural"` (API-based) |
+| api_base_url  | str   | `None`   | **Required** when `embedder="neural"` |
+| api_key       | str   | `None`   | **Required** when `embedder="neural"` |
+| model         | str   | `None`   | **Required** when `embedder="neural"` |
+
+Examples:
+
+```python
+# Hash embedder — offline, zero config (default)
+engine = Engine.open()
+
+# Neural embedder — API-based, higher semantic accuracy
+engine = Engine.open(
+    embedder="neural",
+    api_base_url="https://api.openai.com/v1",
+    api_key="sk-...",
+    model="text-embedding-3-small",
+)
+```
+
+Raises:
+- `TypeError` — `embedder="neural"` missing any of `api_base_url` / `api_key` / `model`
+- `ValueError` — unknown embedder name
 
 Returns: `Engine`
 
