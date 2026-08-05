@@ -10,4 +10,5 @@ fulltext/
 CLAUDE.md
 dist/
 .env
-scripts/publish.sh
+scripts/
+.claude/rules/
