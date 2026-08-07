@@ -632,9 +632,9 @@ dependencies = [
 
 [[package]]
 name = "hippmem-engine"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7854e8fd93828e19d9a2cb2ac0ad4b7bd0259a0748e0d2675a3d0d37082627b4"
+checksum = "ac1d2b79faa4fad41b82fd4eb13fded1fb55ba97bf4340d02571eacdc3f98e04"
 dependencies = [
  "bincode",
  "clap",
@@ -674,7 +674,7 @@ dependencies = [
 
 [[package]]
 name = "hippmem-py"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "hippmem-core",
  "hippmem-engine",

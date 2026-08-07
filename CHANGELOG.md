@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.1] — 2026-08-07
+
+- **New**: `engine.feedback(retrieval_id, used_memory_ids, signal)` — usage
+  feedback for Hebbian learning (retrieval gets more accurate with use)
+- **New**: `RetrieveOutput.retrieval_id` — identifier for feedback
+- **New**: `engine.consolidate(scope="incremental")` — run Hebbian → decay →
+  compaction → summary; returns `ConsolidationReport`
+- Depends on hippmem-engine 0.2.1 (retrieval_id support)
+
 ## [0.2.0] — 2026-08-05
 
 - **New**: `Engine.open(embedder="neural", api_base_url=..., api_key=..., model=...)`

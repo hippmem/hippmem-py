@@ -29,12 +29,32 @@ class RetrievalResult:
 
 class RetrieveOutput:
     """Result of a retrieval query."""
+    retrieval_id: int
+    """Identifier for this retrieval — pass to `Engine.feedback`."""
     results: List[RetrievalResult]
     """Ranked retrieval results."""
     latency_ms: int
     """Query latency in milliseconds."""
     hops_used: int
     """Graph traversal hops used."""
+
+
+class ConsolidationReport:
+    """Report of a consolidation run."""
+    memories_processed: int
+    """Memories processed."""
+    edges_decayed: int
+    """Edges decayed (strength × decay)."""
+    edges_archived: int
+    """Weak edges archived."""
+    edges_merged: int
+    """Edges merged."""
+    summaries_created: int
+    """Summaries created."""
+    contradictions_found: int
+    """Contradictions found."""
+    elapsed_ms: int
+    """Elapsed milliseconds."""
 
 
 class Engine:
@@ -123,7 +143,47 @@ class Engine:
             max_hops: Graph traversal depth. ``None`` = auto.
 
         Returns:
-            RetrieveOutput with ranked results, latency, and hop count.
+            RetrieveOutput with ranked results, latency, hop count,
+            and ``retrieval_id`` for use with :meth:`feedback`.
+        """
+        ...
+
+    def feedback(
+        self,
+        retrieval_id: int,
+        used_memory_ids: List[str],
+        signal: str,
+    ) -> None:
+        """Send usage feedback for a previous retrieval (Hebbian learning).
+
+        The engine strengthens memories that were actually used and
+        weakens rejected ones. More feedback → more accurate retrieval.
+
+        Args:
+            retrieval_id: From ``RetrieveOutput.retrieval_id``.
+            used_memory_ids: Memory IDs that were actually used/confirmed.
+            signal: ``"referenced"``, ``"user_confirmed_correct"``,
+                ``"task_succeeded"``, or ``"user_rejected"``.
+
+        Raises:
+            ValueError: unknown signal name.
+        """
+        ...
+
+    def consolidate(self, scope: str = "incremental") -> ConsolidationReport:
+        """Run consolidation: Hebbian → decay → compaction → summary.
+
+        Call periodically (e.g. at session end) to keep retrieval accurate.
+
+        Args:
+            scope: ``"incremental"`` (default), ``"full"``, ``"edges_only"``,
+                or ``"reindex"``.
+
+        Returns:
+            ConsolidationReport with processed counts and elapsed time.
+
+        Raises:
+            ValueError: unknown scope name.
         """
         ...
 

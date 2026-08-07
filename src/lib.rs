@@ -49,6 +49,9 @@ struct RetrievalResult {
 #[pyclass]
 #[derive(Clone)]
 struct RetrieveOutput {
+    /// Identifier for this retrieval — pass to `Engine.feedback`.
+    #[pyo3(get)]
+    retrieval_id: u64,
     /// Ranked retrieval results.
     #[pyo3(get)]
     results: Vec<RetrievalResult>,
@@ -58,6 +61,33 @@ struct RetrieveOutput {
     /// Graph traversal hops used.
     #[pyo3(get)]
     hops_used: u8,
+}
+
+/// Report of a consolidation run.
+#[pyclass]
+#[derive(Clone)]
+struct ConsolidationReport {
+    /// Memories processed.
+    #[pyo3(get)]
+    memories_processed: u64,
+    /// Edges decayed (strength × decay).
+    #[pyo3(get)]
+    edges_decayed: u64,
+    /// Weak edges archived.
+    #[pyo3(get)]
+    edges_archived: u64,
+    /// Edges merged.
+    #[pyo3(get)]
+    edges_merged: u64,
+    /// Summaries created.
+    #[pyo3(get)]
+    summaries_created: u64,
+    /// Contradictions found.
+    #[pyo3(get)]
+    contradictions_found: u64,
+    /// Elapsed milliseconds.
+    #[pyo3(get)]
+    elapsed_ms: u64,
 }
 
 // ── Engine wrapper ──
@@ -266,9 +296,112 @@ impl PyEngine {
             .collect();
 
         Ok(RetrieveOutput {
+            retrieval_id: out.retrieval_id,
             results,
             latency_ms: out.diagnostics.latency_ms,
             hops_used: out.trace.hops_used,
+        })
+    }
+
+    /// Send usage feedback for a previous retrieval.
+    ///
+    /// The engine uses this signal for Hebbian learning — memories that
+    /// were actually used get strengthened, rejected ones get weakened.
+    /// The more feedback you provide, the more accurate retrieval becomes.
+    ///
+    /// Args:
+    ///     retrieval_id: From ``RetrieveOutput.retrieval_id``.
+    ///     used_memory_ids: Memory IDs (as returned in results) that were
+    ///         actually used/confirmed.
+    ///     signal: One of ``"referenced"``, ``"user_confirmed_correct"``,
+    ///         ``"task_succeeded"``, ``"user_rejected"``.
+    ///
+    /// Raises:
+    ///     ValueError: unknown signal name.
+    #[pyo3(signature = (retrieval_id, used_memory_ids, signal))]
+    fn feedback(
+        &self,
+        retrieval_id: u64,
+        used_memory_ids: Vec<String>,
+        signal: &str,
+    ) -> PyResult<()> {
+        use hippmem_engine::UsageSignal;
+
+        let usage_signal = match signal {
+            "referenced" => UsageSignal::Referenced,
+            "user_confirmed_correct" => UsageSignal::UserConfirmedCorrect,
+            "task_succeeded" => UsageSignal::TaskSucceeded,
+            "user_rejected" => UsageSignal::UserRejected,
+            other => {
+                return Err(PyValueError::new_err(format!(
+                    "signal must be one of 'referenced', 'user_confirmed_correct', \
+                     'task_succeeded', 'user_rejected', got {other:?}"
+                )));
+            }
+        };
+
+        let ids: Vec<hippmem_core::ids::MemoryId> = used_memory_ids
+            .iter()
+            .filter_map(|s| s.parse::<u128>().ok())
+            .map(hippmem_core::ids::MemoryId)
+            .collect();
+
+        self.inner
+            .feedback(hippmem_engine::FeedbackInput {
+                retrieval_id,
+                used_memory_ids: ids,
+                signal: usage_signal,
+            })
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+        Ok(())
+    }
+
+    /// Run consolidation: Hebbian learning → decay → compaction → summary.
+    ///
+    /// Consolidation evolves the memory graph: frequently co-activated
+    /// connections strengthen, stale edges decay, weak edges are archived,
+    /// and similar memories get summarized. Call it periodically (e.g. at
+    /// session end) to keep retrieval accurate over time.
+    ///
+    /// Args:
+    ///     scope: ``"incremental"`` (default), ``"full"``, ``"edges_only"``,
+    ///         or ``"reindex"`` (rebuild all secondary indexes).
+    ///
+    /// Returns:
+    ///     ConsolidationReport with processed counts and elapsed time.
+    ///
+    /// Raises:
+    ///     ValueError: unknown scope name.
+    #[pyo3(signature = (scope = "incremental"))]
+    fn consolidate(&self, scope: &str) -> PyResult<ConsolidationReport> {
+        use hippmem_engine::ConsolidationScope;
+
+        let scope_enum = match scope {
+            "incremental" => ConsolidationScope::Incremental,
+            "full" => ConsolidationScope::Full,
+            "edges_only" => ConsolidationScope::EdgesOnly,
+            "reindex" => ConsolidationScope::Reindex,
+            other => {
+                return Err(PyValueError::new_err(format!(
+                    "scope must be one of 'incremental', 'full', 'edges_only', \
+                     'reindex', got {other:?}"
+                )));
+            }
+        };
+
+        let report = self
+            .inner
+            .consolidate(scope_enum)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+
+        Ok(ConsolidationReport {
+            memories_processed: report.memories_processed,
+            edges_decayed: report.edges_decayed,
+            edges_archived: report.edges_archived,
+            edges_merged: report.edges_merged,
+            summaries_created: report.summaries_created,
+            contradictions_found: report.contradictions_found,
+            elapsed_ms: report.elapsed_ms,
         })
     }
 
@@ -290,6 +423,7 @@ fn hippmem(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<WriteOutput>()?;
     m.add_class::<RetrievalResult>()?;
     m.add_class::<RetrieveOutput>()?;
+    m.add_class::<ConsolidationReport>()?;
     Ok(())
 }
 

@@ -1,6 +1,6 @@
 [package]
 name = "hippmem-py"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 license = "Apache-2.0"
 description = "Python bindings for HIPPMEM — native associative memory engine for AI agents"
@@ -13,6 +13,6 @@ name = "hippmem"
 crate-type = ["cdylib"]
 
 [dependencies]
-hippmem-engine = "0.2.0"
+hippmem-engine = "0.2.1"
 hippmem-core = "0.2.0"
 pyo3 = { version = "0.23", features = ["extension-module"] }
