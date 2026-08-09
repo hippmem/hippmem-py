@@ -6,6 +6,8 @@
 [![PyPI](https://img.shields.io/pypi/v/hippmem.svg)](https://pypi.org/project/hippmem/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
+**Ecosystem**: [Rust engine](https://github.com/hippmem/hippmem) · [Python bindings](https://github.com/hippmem/hippmem-py) · [MCP server](https://github.com/hippmem/hippmem-mcp)
+
 ## Install
 
 ```bash
