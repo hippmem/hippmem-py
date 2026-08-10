@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.3.0] — 2026-08-10
+
+- **Fixed**: feedback had no observable effect on retrieval — memory ids were
+  truncated in the engine's activation log; ids are now stored in full, so
+  confirmations genuinely strengthen memories and rejections lower their usage
+  score (rejected memories are never boosted by the recent-activity channel)
+- **New**: summaries created by `consolidate()` are now searchable (previously
+  invisible to all recall channels); source memories are marked compressed and
+  hidden from retrieval results
+- **Changed**: summarization triggers per cluster of similar low-importance
+  memories instead of over the whole store; memories already covered by a
+  summary are not re-summarized
+- **New**: retrieval traces report real `hops_used`; `max_hops` is honored by
+  graph traversal
+- Depends on hippmem-engine 0.3.0
+
 ## [0.2.1] — 2026-08-07
 
 - **New**: `engine.feedback(retrieval_id, used_memory_ids, signal)` — usage

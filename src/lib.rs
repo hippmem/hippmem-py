@@ -306,8 +306,10 @@ impl PyEngine {
     /// Send usage feedback for a previous retrieval.
     ///
     /// The engine uses this signal for Hebbian learning — memories that
-    /// were actually used get strengthened, rejected ones get weakened.
-    /// The more feedback you provide, the more accurate retrieval becomes.
+    /// were actually used get strengthened (via usage score and edge
+    /// reinforcement), rejected ones get a lower usage score and are never
+    /// boosted by the recent-activity channel. The more feedback you
+    /// provide, the more accurate retrieval becomes.
     ///
     /// Args:
     ///     retrieval_id: From ``RetrieveOutput.retrieval_id``.
@@ -360,8 +362,10 @@ impl PyEngine {
     ///
     /// Consolidation evolves the memory graph: frequently co-activated
     /// connections strengthen, stale edges decay, weak edges are archived,
-    /// and similar memories get summarized. Call it periodically (e.g. at
-    /// session end) to keep retrieval accurate over time.
+    /// and clusters of similar low-importance memories are summarized into a
+    /// summary memory (the sources are marked compressed and hidden from
+    /// retrieval results). Call it periodically (e.g. at session end) to keep
+    /// retrieval accurate over time.
     ///
     /// Args:
     ///     scope: ``"incremental"`` (default), ``"full"``, ``"edges_only"``,

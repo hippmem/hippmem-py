@@ -156,8 +156,10 @@ class Engine:
     ) -> None:
         """Send usage feedback for a previous retrieval (Hebbian learning).
 
-        The engine strengthens memories that were actually used and
-        weakens rejected ones. More feedback → more accurate retrieval.
+        The engine strengthens memories that were actually used (usage score
+        up) and lowers the usage score of rejected ones; rejected memories
+        are never boosted by the recent-activity channel.
+        More feedback → more accurate retrieval.
 
         Args:
             retrieval_id: From ``RetrieveOutput.retrieval_id``.
