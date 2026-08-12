@@ -101,6 +101,57 @@ def test_feedback_unknown_signal_raises(engine):
         engine.feedback(results.retrieval_id, [], "bogus_signal")
 
 
+# ── 0.4.0 behavior contracts (E14) ──
+
+def test_confirm_boosts_memory_across_retrievals(engine):
+    """Confirming a memory raises its score in the next retrieval (recent channel,
+    which counts confirmed signals only since 0.4.0/B2)."""
+    engine.write("Xiaoming and Lihua are high school classmates in Beijing.")
+    engine.write("Xiaoming is a computer science student at Peking University.")
+    engine.write("Lihua works as a Java engineer at Alibaba Cloud.")
+    q = "What is the relationship between Xiaoming and Lihua?"
+    before = engine.retrieve(q)
+    assert len(before.results) >= 3
+    # Confirm the third-ranked memory: the top one is already the RRF max and
+    # its normalized energy does not move (see engine-side test notes).
+    target = before.results[2]
+    engine.feedback(before.retrieval_id, [target.memory_id], "user_confirmed_correct")
+    after = engine.retrieve(q)
+    after_score = next(r.score for r in after.results if r.memory_id == target.memory_id)
+    assert after_score > target.score, (
+        f"confirmation must boost the memory: {target.score} -> {after_score}"
+    )
+
+
+def test_retrieve_is_deterministic(engine):
+    """Repeated retrieval on the same store is bit-identical (0.4.0 F1/B2)."""
+    engine.write("The user prefers Rust for backend services.")
+    engine.write("The project uses redb for storage.")
+    a = engine.retrieve("What storage does the project use?")
+    b = engine.retrieve("What storage does the project use?")
+    assert [r.score for r in a.results] == [r.score for r in b.results]
+    assert [r.memory_id for r in a.results] == [r.memory_id for r in b.results]
+
+
+def test_reject_does_not_boost_any_memory(engine):
+    """A result-set reject must not lift any of the returned memories (0.4.0 B3)."""
+    engine.write("Zhouyu develops large-model applications at Alibaba Cloud.")
+    engine.write("Zhaoqiang handles deployment and monitoring.")
+    engine.write("Wangfang evaluates model quality.")
+    q = "What work does Zhouyu do?"
+    before = engine.retrieve(q)
+    engine.feedback(before.retrieval_id, [], "user_rejected")  # result-set reject
+    after = engine.retrieve(q)
+    for r_after in after.results:
+        r_before = next(
+            (x for x in before.results if x.memory_id == r_after.memory_id), None
+        )
+        if r_before is not None:
+            assert r_after.score <= r_before.score + 1e-9, (
+                "rejection must not boost any memory"
+            )
+
+
 # ── consolidate ──
 
 def test_consolidate_incremental(engine):

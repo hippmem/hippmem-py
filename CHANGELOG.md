@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.4.0] — 2026-08-12
+
+- **Fixed**: retrieval is now deterministic — identical store state and query
+  produce bit-identical scores; consolidation no longer duplicates
+  co-activation edges across cycles; edge changes made during consolidation
+  now actually reach retrieval (written to the graph store)
+- **Changed**: summaries and their compressed sources no longer hit the
+  retrieval channels directly — a summary's text is a concatenation of its
+  sources, so it used to outrank the concrete, correct memories in every
+  related query; sources stay inspectable and a drill-down path is planned
+- **Changed**: retrieval no longer reinforces itself — merely running a query
+  no longer boosts the memories it returns; only explicit feedback does.
+  Confirmed memories no longer score higher in every query: feedback works
+  through association edges, scaled by signal strength
+- **Changed**: `user_rejected` semantics — a targeted rejection (non-empty
+  used ids) weakens the rejected memories' association edges during the next
+  consolidation; an empty list rejects the whole result set (its memories are
+  suppressed in the recency channel). Rejections never strengthen anything
+
 ## [0.3.0] — 2026-08-10
 
 - **Fixed**: feedback had no observable effect on retrieval — memory ids were
