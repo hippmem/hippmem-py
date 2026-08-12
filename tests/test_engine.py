@@ -134,13 +134,13 @@ def test_retrieve_is_deterministic(engine):
 
 
 def test_reject_does_not_boost_any_memory(engine):
-    """A result-set reject must not lift any of the returned memories (0.4.0 B3)."""
+    """An empty rejection must not lift any returned memory (0.4.1: retrieval-quality signal, no memory-side effects)."""
     engine.write("Zhouyu develops large-model applications at Alibaba Cloud.")
     engine.write("Zhaoqiang handles deployment and monitoring.")
     engine.write("Wangfang evaluates model quality.")
     q = "What work does Zhouyu do?"
     before = engine.retrieve(q)
-    engine.feedback(before.retrieval_id, [], "user_rejected")  # result-set reject
+    engine.feedback(before.retrieval_id, [], "user_rejected")  # empty rejection (no memory-side effects since 0.4.1)
     after = engine.retrieve(q)
     for r_after in after.results:
         r_before = next(
