@@ -1,6 +1,12 @@
 # Changelog
 
+## [0.4.1] — 2026-08-18
+
+- **Changed**: engine 0.4.1 alignment — multi-entity queries ("what is the relationship between X and Y?") now prefer memories covering more of the query's entities (entity channel tiers 0.2/0.35/0.5 + a rerank multiplier of up to 1.2·k/N), so full-coverage answers overtake single-entity word-surface decoys; single-entity queries are unaffected
+- **Fixed**: Chinese entity extraction no longer fuses a proper name with the copula (the fused "Li Hua shi" form no longer breaks canonical-exact entity matching); empty `user_rejected` feedback is now a retrieval-quality signal with no memory-side effects (audit only)
+
 ## [0.4.0] — 2026-08-12
+ — 2026-08-12
 
 - **Fixed**: retrieval is now deterministic — identical store state and query
   produce bit-identical scores; consolidation no longer duplicates
