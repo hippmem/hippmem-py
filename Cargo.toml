@@ -13,6 +13,9 @@ name = "hippmem"
 crate-type = ["cdylib"]
 
 [dependencies]
-hippmem-engine = { path = "../hippmem-dev/crates/hippmem-engine", version = "0.4.1" }
-hippmem-core = { path = "../hippmem-dev/crates/hippmem-core", version = "0.4.1" }
+# Published source must use crates.io deps — path deps point at a local
+# hippmem-dev checkout that does not exist on CI. Local dev overrides them
+# with build-local.sh WITHOUT committing (see CLAUDE.md).
+hippmem-engine = "0.4.1"
+hippmem-core = "0.4.1"
 pyo3 = { version = "0.23", features = ["extension-module"] }
