@@ -61,6 +61,11 @@ struct RetrieveOutput {
     /// Graph traversal hops used.
     #[pyo3(get)]
     hops_used: u8,
+    /// True when the store has memories but no persisted dense vectors
+    /// (old store / embedding-failed store): SemanticDense recall is empty.
+    /// Run `consolidate("reindex")` to rebuild the dense index.
+    #[pyo3(get)]
+    semantic_index_degraded: bool,
 }
 
 /// Report of a consolidation run.
@@ -300,6 +305,7 @@ impl PyEngine {
             results,
             latency_ms: out.diagnostics.latency_ms,
             hops_used: out.trace.hops_used,
+            semantic_index_degraded: self.inner.semantic_index_degraded(),
         })
     }
 
