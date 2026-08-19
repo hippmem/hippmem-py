@@ -1,6 +1,12 @@
 # Changelog
 
+## [0.4.2] — 2026-08-19
+
+- **Added**: `RetrieveOutput.semantic_index_degraded` — reports when the store has memories but no persisted dense vectors (old store / embedding-failed store); run `consolidate("reindex")` to rebuild the dense index
+- **Changed**: engine 0.4.2 alignment — semantic indexes are persisted and rebuilt on open, so semantic recall survives restarts (previously every reopened store silently lost SemanticDense/SemanticBinary)
+
 ## [0.4.1] — 2026-08-18
+ — 2026-08-18
 
 - **Changed**: engine 0.4.1 alignment — multi-entity queries ("what is the relationship between X and Y?") now prefer memories covering more of the query's entities (entity channel tiers 0.2/0.35/0.5 + a rerank multiplier of up to 1.2·k/N), so full-coverage answers overtake single-entity word-surface decoys; single-entity queries are unaffected
 - **Fixed**: Chinese entity extraction no longer fuses a proper name with the copula (the fused "Li Hua shi" form no longer breaks canonical-exact entity matching); empty `user_rejected` feedback is now a retrieval-quality signal with no memory-side effects (audit only)
