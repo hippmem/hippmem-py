@@ -605,9 +605,9 @@ checksum = "fc0fef456e4baa96da950455cd02c081ca953b141298e41db3fc7e36b1da849c"
 
 [[package]]
 name = "hippmem-consolidation"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe653693392ccfc1d0b036d8605de352b393d5366b02d81800873c9b0af9d19c"
+checksum = "38dc1f677b1b157897e0b1d7eef80d2af5f9bffd79937f28755d274eabeadc6c"
 dependencies = [
  "hippmem-core",
  "hippmem-model",
@@ -616,9 +616,9 @@ dependencies = [
 
 [[package]]
 name = "hippmem-core"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "63fa984712b9b98f72bff2263e76d93b01acf877c990e3f5eaf2c543c8e09647"
+checksum = "31765ba2358a4b873347f45b8572f348ff00a7366ae38c26ba4085fb37e955f4"
 dependencies = [
  "figment",
  "jieba-rs",
@@ -632,9 +632,9 @@ dependencies = [
 
 [[package]]
 name = "hippmem-engine"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2597e7e238201f6547cf27d7af40f4832347e4a5230fdfcae9e436df710721a"
+checksum = "53db0a465b4c0790bfc58f729a603605856850c55e938a9aedfb058a2a82df30"
 dependencies = [
  "bincode",
  "clap",
@@ -657,9 +657,9 @@ dependencies = [
 
 [[package]]
 name = "hippmem-model"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2beb643ceaa97005344bd9220474c7e55bc5a06477e3a49f836bd2dd1db34bd8"
+checksum = "61f3969678f175fb7ddbe4f35b82d095270a0b3aea3d829198fd9d618921353f"
 dependencies = [
  "async-trait",
  "hippmem-core",
@@ -674,7 +674,7 @@ dependencies = [
 
 [[package]]
 name = "hippmem-py"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "hippmem-core",
  "hippmem-engine",
@@ -683,9 +683,9 @@ dependencies = [
 
 [[package]]
 name = "hippmem-retrieval"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d373cce328d1882dbe1ddfb81b0ff94b23665462b8e11c6077d232974bcfb64f"
+checksum = "1c5448c6129c4a436c89b5587f51b887463ae58a3440b1f379a8e9b242764e5b"
 dependencies = [
  "hippmem-core",
  "serde",
@@ -693,9 +693,9 @@ dependencies = [
 
 [[package]]
 name = "hippmem-store"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ff4dcf311450b97cc550ae01ecd58944b9c3e5e6f593aa2632bbcd8805b1d31"
+checksum = "368df9df510f37efa666110beda63a589ce2282aa16a6c8b9fbad0aea516f4b5"
 dependencies = [
  "bincode",
  "hippmem-core",
@@ -707,9 +707,9 @@ dependencies = [
 
 [[package]]
 name = "hippmem-write"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "add9fabcc8fe7f73934cc9b581508a69640b878affa673c90406ddb5432c775a"
+checksum = "753e3bbd774de98b96c42b7021eb4b42a2da916107d72429af67e91ac4ea97cc"
 dependencies = [
  "hippmem-core",
  "hippmem-model",
