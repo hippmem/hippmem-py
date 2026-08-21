@@ -1,6 +1,11 @@
 # Changelog
 
+## [0.4.3] — 2026-08-21
+
+- **Changed**: engine 0.4.3 alignment — confirmation learns context-answer links (a confirmed memory lifts only in queries sharing its entity/topic context, accumulating across rounds), propagation-path edges strengthen on confirmation, and edge decay follows a forgetting curve (review-dependent half-life). Retrieval improves with feedback as intended.
+
 ## [0.4.2] — 2026-08-19
+ — 2026-08-19
 
 - **Added**: `RetrieveOutput.semantic_index_degraded` — reports when the store has memories but no persisted dense vectors (old store / embedding-failed store); run `consolidate("reindex")` to rebuild the dense index
 - **Changed**: engine 0.4.2 alignment — semantic indexes are persisted and rebuilt on open, so semantic recall survives restarts (previously every reopened store silently lost SemanticDense/SemanticBinary)
