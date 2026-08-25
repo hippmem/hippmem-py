@@ -236,3 +236,35 @@ def test_default_values(engine):
     assert out.memory_id
     results = engine.retrieve("simple memory")
     assert results.latency_ms >= 0
+
+
+def test_open_extractor_param(tmp_path):
+    """extractor param accepts hash/auto/neural (auto without key -> hash)."""
+    import os
+    from hippmem import Engine
+
+    # auto without ANTHROPIC_API_KEY -> deterministic fallback, works offline
+    e = Engine.open(str(tmp_path / "auto" / "store"), embedder="hash", extractor="auto")
+    out = e.write("test extractor param")
+    assert out.memory_id
+    e.close()
+
+    # explicit hash works
+    e2 = Engine.open(str(tmp_path / "hash" / "store"), embedder="hash", extractor="hash")
+    e2.write("test extractor hash")
+    e2.close()
+
+    # explicit neural without a key fails fast
+    os.environ.pop("ANTHROPIC_API_KEY", None)
+    try:
+        Engine.open(str(tmp_path / "neural" / "store"), embedder="hash", extractor="neural")
+        assert False, "neural extractor without ANTHROPIC_API_KEY must fail"
+    except RuntimeError as exc:
+        assert "ANTHROPIC_API_KEY" in str(exc)
+
+    # invalid value rejected
+    try:
+        Engine.open(str(tmp_path / "bad" / "store"), embedder="hash", extractor="llm")
+        assert False, "extractor='llm' must be rejected (hash|neural|auto)"
+    except ValueError:
+        pass

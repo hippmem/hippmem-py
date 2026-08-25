@@ -129,6 +129,11 @@ impl PyEngine {
     ///     path: Path to the store file. Defaults to ``"./hippmem_data"``.
     ///     embedder: ``"hash"`` (default, offline SimHash) or ``"neural"``
     ///         (API-based, higher semantic accuracy).
+    ///     extractor: ``"auto"`` (default — uses Anthropic when
+    ///         ``ANTHROPIC_API_KEY`` is present, deterministic rules
+    ///         otherwise), ``"hash"`` (deterministic rules only) or
+    ///         ``"neural"`` (Anthropic Claude structured extraction,
+    ///         requires ``ANTHROPIC_API_KEY``).
     ///     api_base_url: Required when ``embedder="neural"``.
     ///     api_key: Required when ``embedder="neural"``.
     ///     model: Required when ``embedder="neural"``.
@@ -143,6 +148,7 @@ impl PyEngine {
     #[pyo3(signature = (
         path = None,
         embedder = "hash",
+        extractor = "auto",
         api_base_url = None,
         api_key = None,
         model = None,
@@ -150,6 +156,7 @@ impl PyEngine {
     fn open(
         path: Option<String>,
         embedder: &str,
+        extractor: &str,
         api_base_url: Option<String>,
         api_key: Option<String>,
         model: Option<String>,
@@ -181,9 +188,27 @@ impl PyEngine {
             }
         };
 
+        // Extractor backend choice (08 §5): "auto" uses Anthropic when
+        // ANTHROPIC_API_KEY is present, deterministic rules otherwise —
+        // the default-enhancement / degraded-guarantee semantics.
+        let backend = hippmem_model::registry::BackendSelection {
+            extractor: match extractor {
+                "hash" => hippmem_model::registry::BackendChoice::Deterministic,
+                "neural" => hippmem_model::registry::BackendChoice::Api,
+                "auto" => hippmem_model::registry::BackendChoice::Auto,
+                other => {
+                    return Err(PyValueError::new_err(format!(
+                        "extractor must be 'hash', 'neural' or 'auto', got {other:?}"
+                    )));
+                }
+            },
+            ..Default::default()
+        };
+
         let engine = Engine::open(EngineConfig {
             store_dir,
             embedder: embedder_config,
+            backend,
             ..Default::default()
         })
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;

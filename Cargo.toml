@@ -18,4 +18,5 @@ crate-type = ["cdylib"]
 # with build-local.sh WITHOUT committing (see CLAUDE.md).
 hippmem-engine = "0.4.3"
 hippmem-core = "0.4.3"
+hippmem-model = "0.4.3"
 pyo3 = { version = "0.23", features = ["extension-module"] }
