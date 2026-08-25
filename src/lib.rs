@@ -68,6 +68,35 @@ struct RetrieveOutput {
     semantic_index_degraded: bool,
 }
 
+/// A single memory in a list result.
+#[pyclass]
+#[derive(Clone)]
+struct ListItem {
+    #[pyo3(get)]
+    memory_id: String,
+    #[pyo3(get)]
+    content_preview: String,
+    #[pyo3(get)]
+    content_type: String,
+    #[pyo3(get)]
+    created_at_ms: i64,
+    #[pyo3(get)]
+    importance: f32,
+}
+
+/// Paginated list result.
+#[pyclass]
+#[derive(Clone)]
+struct ListOutput {
+    #[pyo3(get)]
+    items: Vec<ListItem>,
+    /// Cursor for the next page; None means the last page.
+    #[pyo3(get)]
+    next_cursor: Option<String>,
+    #[pyo3(get)]
+    total: u64,
+}
+
 /// Report of a consolidation run.
 #[pyclass]
 #[derive(Clone)]
@@ -407,6 +436,44 @@ impl PyEngine {
     ///
     /// Raises:
     ///     ValueError: unknown scope name.
+    /// List memories (paginated, optional content-type filter).
+    ///
+    /// Args:
+    ///     limit: Page size (default 20, max 100).
+    ///     cursor: Opaque cursor string from the previous page (None = first page).
+    ///     content_type: Optional filter (Decision, Preference, ...).
+    #[pyo3(signature = (limit = 20, cursor = None, content_type = None))]
+    fn list_memories(
+        &self,
+        limit: usize,
+        cursor: Option<String>,
+        content_type: Option<&str>,
+    ) -> PyResult<ListOutput> {
+        let out = self
+            .inner
+            .list(hippmem_engine::ListInput {
+                limit: limit.min(100),
+                cursor: cursor.and_then(|c| c.parse::<u128>().ok()),
+                content_type: content_type.map(parse_content_type),
+            })
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+        Ok(ListOutput {
+            items: out
+                .items
+                .into_iter()
+                .map(|i| ListItem {
+                    memory_id: i.id.0.to_string(),
+                    content_preview: i.content_preview,
+                    content_type: format!("{:?}", i.content_type),
+                    created_at_ms: i.created_at.0,
+                    importance: i.importance,
+                })
+                .collect(),
+            next_cursor: out.next_cursor.map(|c| c.to_string()),
+            total: out.total,
+        })
+    }
+
     #[pyo3(signature = (scope = "incremental"))]
     fn consolidate(&self, scope: &str) -> PyResult<ConsolidationReport> {
         use hippmem_engine::ConsolidationScope;

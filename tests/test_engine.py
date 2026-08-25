@@ -268,3 +268,18 @@ def test_open_extractor_param(tmp_path):
         assert False, "extractor='llm' must be rejected (hash|neural|auto)"
     except ValueError:
         pass
+
+
+def test_list_memories(tmp_path):
+    """list_memories returns written memories with pagination fields."""
+    from hippmem import Engine
+
+    e = Engine.open(str(tmp_path / "a" / "store"), embedder="hash")
+    e.write("list test memory one")
+    e.write("list test memory two")
+    out = e.list_memories(limit=10)
+    assert out.total >= 2
+    previews = [i.content_preview for i in out.items]
+    assert any("list test memory one" in p for p in previews)
+    assert any("list test memory two" in p for p in previews)
+    e.close()
