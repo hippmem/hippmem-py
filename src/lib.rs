@@ -442,6 +442,14 @@ impl PyEngine {
     ///     limit: Page size (default 20, max 100).
     ///     cursor: Opaque cursor string from the previous page (None = first page).
     ///     content_type: Optional filter (Decision, Preference, ...).
+    /// Export all memories as JSONL (memory + associations).
+    ///
+    /// Args:
+    ///     output_path: Optional file path to write the export to; None
+    ///         returns the JSONL string.
+    ///
+    /// Returns:
+    ///     dict with count, json (when no path) and written_to.
     #[pyo3(signature = (limit = 20, cursor = None, content_type = None))]
     fn list_memories(
         &self,
@@ -471,6 +479,39 @@ impl PyEngine {
                 .collect(),
             next_cursor: out.next_cursor.map(|c| c.to_string()),
             total: out.total,
+        })
+    }
+
+    /// Export all memories as JSONL (memory + associations).
+    ///
+    /// Args:
+    ///     output_path: Optional file path to write the export to; None
+    ///         returns the JSONL string.
+    ///
+    /// Returns:
+    ///     dict with count, json (when no path) and written_to.
+    #[pyo3(signature = (output_path = None))]
+    fn export_memories(
+        &self,
+        output_path: Option<String>,
+    ) -> PyResult<pyo3::Py<pyo3::types::PyDict>> {
+        use pyo3::types::PyDict;
+        let out = self
+            .inner
+            .dump(hippmem_engine::DumpInput {
+                output_path: output_path.map(PathBuf::from),
+            })
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+        Python::with_gil(|py| {
+            let d = PyDict::new(py);
+            d.set_item("count", out.count)?;
+            if let Some(json) = out.json {
+                d.set_item("json", json)?;
+            }
+            if let Some(written_to) = out.written_to {
+                d.set_item("written_to", written_to.to_string_lossy().to_string())?;
+            }
+            Ok(d.unbind())
         })
     }
 

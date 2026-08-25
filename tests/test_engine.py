@@ -283,3 +283,20 @@ def test_list_memories(tmp_path):
     assert any("list test memory one" in p for p in previews)
     assert any("list test memory two" in p for p in previews)
     e.close()
+
+
+def test_export_memories(tmp_path):
+    """export_memories returns JSONL of all memories (and writes to a path)."""
+    from hippmem import Engine
+
+    e = Engine.open(str(tmp_path / "a" / "store"), embedder="hash")
+    e.write("export test memory")
+    out = e.export_memories()
+    assert out["count"] >= 1
+    assert "export test memory" in out["json"]
+    # write to file
+    out2 = e.export_memories(str(tmp_path / "export.jsonl"))
+    assert out2["written_to"] is not None
+    assert out2["count"] >= 1
+    assert "export test memory" in open(str(tmp_path / "export.jsonl")).read()
+    e.close()
