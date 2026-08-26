@@ -300,3 +300,39 @@ def test_export_memories(tmp_path):
     assert out2["count"] >= 1
     assert "export test memory" in open(str(tmp_path / "export.jsonl")).read()
     e.close()
+
+
+def test_delete_memories(tmp_path):
+    """delete_memories removes memories from listing and retrieval."""
+    from hippmem import Engine
+
+    e = Engine.open(str(tmp_path / "a" / "store"), embedder="hash")
+    a = e.write("delete test memory alpha").memory_id
+    b = e.write("delete test memory beta").memory_id
+    assert e.list_memories(limit=10).total >= 2
+
+    out = e.delete_memories([a])
+    assert out["deleted"] == 1
+    assert out["edges_removed"] >= 0
+
+    listed = e.list_memories(limit=10)
+    assert listed.total >= 1
+    previews = [i.content_preview for i in listed.items]
+    assert not any("alpha" in p for p in previews)
+    assert any("beta" in p for p in previews)
+
+    # Idempotent: deleting again is a no-op.
+    again = e.delete_memories([a])
+    assert again["deleted"] == 0
+    e.close()
+
+
+def test_delete_memories_invalid_id(tmp_path):
+    """delete_memories rejects non-numeric ids."""
+    from hippmem import Engine
+    import pytest
+
+    e = Engine.open(str(tmp_path / "a" / "store"), embedder="hash")
+    with pytest.raises(ValueError):
+        e.delete_memories(["not-a-number"])
+    e.close()

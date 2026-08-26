@@ -515,6 +515,39 @@ impl PyEngine {
         })
     }
 
+    /// Delete memories and their full cascade (kv, indexes, graph edges,
+    /// context links). Audit records are kept.
+    ///
+    /// Args:
+    ///     memory_ids: List of memory ids (decimal strings from write/list).
+    ///
+    /// Returns:
+    ///     dict with deleted (count) and edges_removed.
+    #[pyo3(signature = (memory_ids))]
+    fn delete_memories(&self, memory_ids: Vec<String>) -> PyResult<pyo3::Py<pyo3::types::PyDict>> {
+        use pyo3::types::PyDict;
+        let ids: Result<Vec<_>, _> = memory_ids
+            .iter()
+            .map(|s| {
+                s.parse::<u128>().map(hippmem_core::ids::MemoryId).map_err(|_| {
+                    PyValueError::new_err(format!("memory_id must be a decimal integer, got {s:?}"))
+                })
+            })
+            .collect();
+        let out = self
+            .inner
+            .delete(hippmem_engine::DeleteInput {
+                memory_ids: ids?,
+            })
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+        Python::with_gil(|py| {
+            let d = PyDict::new(py);
+            d.set_item("deleted", out.deleted)?;
+            d.set_item("edges_removed", out.edges_removed)?;
+            Ok(d.unbind())
+        })
+    }
+
     #[pyo3(signature = (scope = "incremental"))]
     fn consolidate(&self, scope: &str) -> PyResult<ConsolidationReport> {
         use hippmem_engine::ConsolidationScope;
