@@ -156,13 +156,15 @@ impl PyEngine {
     ///
     /// Args:
     ///     path: Path to the store file. Defaults to ``"./hippmem_data"``.
-    ///     embedder: ``"hash"`` (default, offline SimHash) or ``"neural"``
-    ///         (API-based, higher semantic accuracy).
-    ///     extractor: ``"auto"`` (default — uses Anthropic when
-    ///         ``ANTHROPIC_API_KEY`` is present, deterministic rules
-    ///         otherwise), ``"hash"`` (deterministic rules only) or
-    ///         ``"neural"`` (Anthropic Claude structured extraction,
-    ///         requires ``ANTHROPIC_API_KEY``).
+    ///     embedder: ``"auto"`` (default — uses ``neural`` when
+    ///         ``OPENAI_API_KEY`` is present, ``hash`` otherwise),
+    ///         ``"hash"`` (offline SimHash) or ``"neural"`` (API-based,
+    ///         requires api_base_url/api_key/model).
+    ///     extractor: ``"auto"`` (default — uses ``neural`` when
+    ///         ``HIPPMEM_EXTRACTOR_API_KEY``/``OPENAI_API_KEY`` is present,
+    ///         deterministic rules otherwise), ``"hash"`` (deterministic
+    ///         rules only) or ``"neural"`` (OpenAI-compatible structured
+    ///         extraction, requires the extractor env config).
     ///     api_base_url: Required when ``embedder="neural"``.
     ///     api_key: Required when ``embedder="neural"``.
     ///     model: Required when ``embedder="neural"``.
@@ -172,11 +174,12 @@ impl PyEngine {
     ///
     /// Raises:
     ///     TypeError: ``embedder="neural"`` without all three API params.
+    ///     (``embedder="auto"`` reads OPENAI_API_KEY / HIPPMEM_EMBEDDING_* env.)
     ///     ValueError: unknown embedder name.
     #[staticmethod]
     #[pyo3(signature = (
         path = None,
-        embedder = "hash",
+        embedder = "auto",
         extractor = "auto",
         api_base_url = None,
         api_key = None,
@@ -195,6 +198,9 @@ impl PyEngine {
             .unwrap_or_else(|| PathBuf::from("./hippmem_data"));
 
         let embedder_config = match embedder {
+            // Auto: strongest-first default (2026-08-26) — neural when
+            // OPENAI_API_KEY is set, deterministic hash otherwise.
+            "auto" => EmbedderConfig::Auto,
             "hash" => EmbedderConfig::Hash { dimensions: 256 },
             "neural" => {
                 let (Some(base_url), Some(key), Some(model_name)) = (api_base_url, api_key, model)
@@ -212,14 +218,15 @@ impl PyEngine {
             }
             other => {
                 return Err(PyValueError::new_err(format!(
-                    "embedder must be 'hash' or 'neural', got {other:?}"
+                    "embedder must be 'auto', 'hash' or 'neural', got {other:?}"
                 )));
             }
         };
 
-        // Extractor backend choice (08 §5): "auto" uses Anthropic when
-        // ANTHROPIC_API_KEY is present, deterministic rules otherwise —
-        // the default-enhancement / degraded-guarantee semantics.
+        // Extractor backend choice (08 §5): "auto" uses the OpenAI-compatible
+        // backend when HIPPMEM_EXTRACTOR_API_KEY / OPENAI_API_KEY is present,
+        // deterministic rules otherwise — the default-enhancement /
+        // degraded-guarantee semantics (vendor-neutral, 2026-08-26).
         let backend = hippmem_model::registry::BackendSelection {
             extractor: match extractor {
                 "hash" => hippmem_model::registry::BackendChoice::Deterministic,

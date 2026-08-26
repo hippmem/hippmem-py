@@ -243,7 +243,7 @@ def test_open_extractor_param(tmp_path):
     import os
     from hippmem import Engine
 
-    # auto without ANTHROPIC_API_KEY -> deterministic fallback, works offline
+    # auto without extractor key -> deterministic fallback, works offline
     e = Engine.open(str(tmp_path / "auto" / "store"), embedder="hash", extractor="auto")
     out = e.write("test extractor param")
     assert out.memory_id
@@ -255,12 +255,13 @@ def test_open_extractor_param(tmp_path):
     e2.close()
 
     # explicit neural without a key fails fast
-    os.environ.pop("ANTHROPIC_API_KEY", None)
+    os.environ.pop("HIPPMEM_EXTRACTOR_API_KEY", None)
+    os.environ.pop("OPENAI_API_KEY", None)
     try:
         Engine.open(str(tmp_path / "neural" / "store"), embedder="hash", extractor="neural")
-        assert False, "neural extractor without ANTHROPIC_API_KEY must fail"
+        assert False, "neural extractor without API key must fail"
     except RuntimeError as exc:
-        assert "ANTHROPIC_API_KEY" in str(exc)
+        assert "auth/missing key" in str(exc)
 
     # invalid value rejected
     try:
