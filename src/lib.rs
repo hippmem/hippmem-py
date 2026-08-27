@@ -184,6 +184,7 @@ impl PyEngine {
         api_base_url = None,
         api_key = None,
         model = None,
+        consolidate_interval_ms = None,
     ))]
     fn open(
         path: Option<String>,
@@ -192,6 +193,7 @@ impl PyEngine {
         api_base_url: Option<String>,
         api_key: Option<String>,
         model: Option<String>,
+        consolidate_interval_ms: Option<u64>,
     ) -> PyResult<Self> {
         let store_dir = path
             .map(PathBuf::from)
@@ -241,10 +243,19 @@ impl PyEngine {
             ..Default::default()
         };
 
+        let background = match consolidate_interval_ms {
+            Some(ms) => hippmem_engine::BackgroundConfig {
+                consolidate_interval_ms: ms,
+                ..Default::default()
+            },
+            // None: engine default (1h background consolidation worker).
+            None => Default::default(),
+        };
         let engine = Engine::open(EngineConfig {
             store_dir,
             embedder: embedder_config,
             backend,
+            background,
             ..Default::default()
         })
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
