@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.5] — 2026-08-27
+
+- **Added**: `Engine.open(consolidate_interval_ms=...)` — controls the engine's background consolidation worker (None = engine default 1h; 0 = disabled); long-lived processes keep the memory graph auto-maintained
+- **Changed**: engine 0.4.5 alignment (query time-aware retrieval: temporal expressions in queries now recall past-date memories; `Engine::open` returns a shared handle)
+
 ## [0.4.4] — 2026-08-27
 
 - **Added**: `delete_memories` (full cascade cleanup: storage, indexes, edges, context links), `list_memories` (paginated, content-type filter), `export_memories` (JSONL full export)
