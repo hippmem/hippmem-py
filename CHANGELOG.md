@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.4] — 2026-08-27
+
+- **Added**: `delete_memories` (full cascade cleanup: storage, indexes, edges, context links), `list_memories` (paginated, content-type filter), `export_memories` (JSONL full export)
+- **Changed**: `extractor` backend parameter (`hash` / `neural` / `auto`, default `auto` — OpenAI-compatible extraction when a key is present); `embedder` defaults to `auto` (neural when `OPENAI_API_KEY` is available, deterministic hash otherwise)
+- Extractor settings are independent from the embedder: `HIPPMEM_EXTRACTOR_API_KEY` / `HIPPMEM_EXTRACTOR_BASE_URL` / `HIPPMEM_EXTRACTOR_MODEL`
+
 ## [0.4.3] — 2026-08-21
 
 - **Changed**: engine 0.4.3 alignment — confirmation learns context-answer links (a confirmed memory lifts only in queries sharing its entity/topic context, accumulating across rounds), propagation-path edges strengthen on confirmation, and edge decay follows a forgetting curve (review-dependent half-life). Retrieval improves with feedback as intended.
