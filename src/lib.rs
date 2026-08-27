@@ -536,16 +536,18 @@ impl PyEngine {
         let ids: Result<Vec<_>, _> = memory_ids
             .iter()
             .map(|s| {
-                s.parse::<u128>().map(hippmem_core::ids::MemoryId).map_err(|_| {
-                    PyValueError::new_err(format!("memory_id must be a decimal integer, got {s:?}"))
-                })
+                s.parse::<u128>()
+                    .map(hippmem_core::ids::MemoryId)
+                    .map_err(|_| {
+                        PyValueError::new_err(format!(
+                            "memory_id must be a decimal integer, got {s:?}"
+                        ))
+                    })
             })
             .collect();
         let out = self
             .inner
-            .delete(hippmem_engine::DeleteInput {
-                memory_ids: ids?,
-            })
+            .delete(hippmem_engine::DeleteInput { memory_ids: ids? })
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
         Python::with_gil(|py| {
             let d = PyDict::new(py);
