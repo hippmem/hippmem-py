@@ -6,6 +6,7 @@ use hippmem_engine::{Engine, EngineConfig, RetrieveContext, RetrieveInput, Write
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 // ── Python types ──
 
@@ -147,7 +148,7 @@ struct ConsolidationReport {
 ///         print(f"[{r.score:.3f}] {r.content}")
 #[pyclass(name = "Engine")]
 struct PyEngine {
-    inner: Engine,
+    inner: Arc<Engine>,
 }
 
 #[pymethods]
